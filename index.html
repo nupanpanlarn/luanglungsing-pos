@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>POS สิงห์มงคลนาม - ไม่มี QZ Tray</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;color:#202124;background:#f4f6f8}
+*{box-sizing:border-box}body{margin:0}header{background:#214e3d;color:white;padding:16px 18px}
+header h1{font-size:1.25rem;margin:0 0 4px}header p{margin:0;font-size:.9rem;opacity:.9}
+nav{display:flex;gap:8px;padding:10px;background:#fff;position:sticky;top:0;z-index:5;box-shadow:0 2px 8px #0000000d;overflow:auto}
+nav button{white-space:nowrap;border:0;background:#edf1ef;padding:10px 14px;border-radius:10px;font-weight:700;color:#234}
+nav button.active{background:#214e3d;color:#fff}
+main{max-width:1100px;margin:auto;padding:14px}.page{display:none}.page.active{display:block}
+.layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,.9fr);gap:14px}
+.panel{background:#fff;border-radius:14px;padding:15px;box-shadow:0 2px 10px #00000008;margin-bottom:14px}
+h2{font-size:1.08rem;margin:0 0 12px}h3{font-size:1rem;margin:12px 0 8px}
+.products{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:9px}
+.product-group{margin-bottom:18px}.product-group:last-child{margin-bottom:0}.product-group h3{margin:0 0 9px;padding:8px 10px;background:#edf3ef;border-left:4px solid #21543f;border-radius:7px}.payment-total{color:#c62828!important}
+.product{border:1px solid #d8e1dc;background:#fbfdfc;border-radius:12px;padding:10px;text-align:left;min-height:150px;display:flex;flex-direction:column;gap:7px}.product-photo{width:100%;height:94px;object-fit:contain;background:#f1f4f2;border-radius:8px}.product-photo-placeholder{width:100%;height:94px;display:flex;align-items:center;justify-content:center;background:#f1f4f2;border-radius:8px;color:#8a958e;font-size:2rem}.product strong{line-height:1.35}
+.product strong{display:block;font-size:.98rem;margin-bottom:6px}.product span{color:#215c42;font-weight:800}
+button{cursor:pointer;font:inherit}.primary{background:#21543f;color:white;border:0;border-radius:10px;padding:12px 15px;font-weight:750}
+.secondary{background:#eef2ef;color:#234;border:1px solid #d7dfda;border-radius:9px;padding:9px 12px;font-weight:650}
+.danger{background:#fff0ef;color:#9a2520;border:1px solid #efc4c1;border-radius:9px;padding:8px 10px;font-weight:700}
+input,select,textarea{font:inherit;width:100%;border:1px solid #ccd5d0;border-radius:9px;padding:10px;background:#fff}
+label{display:block;font-size:.9rem;font-weight:650;margin:10px 0 5px}
+.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}.muted{color:#66736c;font-size:.88rem}
+.cartline{display:grid;grid-template-columns:1fr auto;gap:8px;padding:11px 0;border-bottom:1px solid #edf0ee}
+.qty{display:flex;align-items:center;gap:7px;margin-top:7px}.qty button{width:32px;height:32px;border:1px solid #d5ddd8;background:#f7f9f8;border-radius:8px;font-weight:800}
+.total{font-size:1.55rem;font-weight:850;color:#214e3d}.pay-options{display:flex;gap:8px}.pay-options button{flex:1}
+.pay-options .selected{background:#214e3d;color:#fff}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.metric{padding:13px;background:#f5f8f6;border-radius:11px}.metric .num{font-size:1.35rem;font-weight:850;margin-top:5px}
+.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid #e8ece9;vertical-align:top}th{background:#f6f8f7;white-space:nowrap}
+.status{font-size:.8rem;font-weight:750;border-radius:6px;padding:4px 7px;background:#e5f4e9;color:#21643a}.cancelled{background:#ffebe9;color:#a12620}
+.notice{padding:10px 12px;background:#fff8e7;border:1px solid #f0dfb0;border-radius:10px;font-size:.9rem;margin-bottom:12px}
+.actions{display:flex;flex-wrap:wrap;gap:8px}.empty{text-align:center;padding:22px;color:#758078}
+@media(max-width:760px){.layout{grid-template-columns:1fr}main{padding:10px}.panel{padding:13px}.products{grid-template-columns:repeat(2,minmax(0,1fr))}header{padding:14px}.total{font-size:1.4rem}}
+@media print{nav,.no-print,header p{display:none!important}body{background:white}.page{display:none!important}#history.page.active,#report.page.active{display:block!important}.panel{box-shadow:none;border:1px solid #ddd}}
+</style>
+</head>
+<body>
+<header><h1>POS สิงห์มงคลนาม</h1><p>เหรียญสิงห์มงคลนาม • บันทึกในอุปกรณ์นี้</p></header>
+<nav class="no-print">
+<button class="active" data-page="sell">ขายเหรียญ</button>
+<button data-page="history">ประวัติบิล</button>
+<button data-page="report">สรุปยอดรายวัน</button>
+<button data-page="settings">ตั้งค่าสินค้า</button>
+</nav>
+<main>
+<section id="sell" class="page active">
+<div class="notice">ข้อมูลเก็บอยู่ในเบราว์เซอร์ของเครื่องนี้เท่านั้น อย่าล้างข้อมูลเว็บไซต์หรือเปลี่ยนเบราว์เซอร์ก่อนสำรองไฟล์ CSV</div>
+<div class="layout">
+<div class="panel"><h2>เลือกเหรียญ</h2><div id="productGrid" class="products"></div></div>
+<div>
+<div class="panel"><h2>รายการที่เลือก</h2><div id="cart"><div class="empty">ยังไม่ได้เลือกสินค้า</div></div>
+<div style="border-top:1px solid #e7ece8;padding-top:12px;margin-top:8px"><div class="muted">ยอดรวมทั้งบิล</div><div id="cartTotal" class="total payment-total">฿0.00</div></div>
+<div class="actions" style="margin-top:12px"><button class="secondary" id="clearCart">ล้างรายการ</button><button class="primary" id="checkoutBtn" style="flex:1">ไปชำระเงิน</button></div>
+</div>
+<div class="panel" id="paymentPanel" style="display:none"><h2>รับชำระเงิน</h2><div class="muted">ยอดที่ต้องชำระ</div><div id="payTotal" class="total payment-total">฿0.00</div>
+<label>วิธีชำระเงิน</label><div class="pay-options"><button class="secondary selected" data-method="cash">เงินสด</button><button class="secondary" data-method="transfer">โอนเงิน</button></div>
+<div id="cashFields"><label for="cashReceived">รับเงินสด (บาท)</label><input id="cashReceived" type="number" min="0" step="0.01" placeholder="กรอกยอดเงินที่รับ"><div class="muted" style="margin-top:7px">เงินทอน: <strong id="changeAmount">฿0.00</strong></div></div>
+<div id="transferFields" style="display:none"><div class="notice" style="margin-top:10px">ให้ลูกค้าโอนเข้าบัญชีวัดโดยตรง พนักงานต้องตรวจสลิปหรือยอดเงินจริงก่อนกดยืนยัน ระบบนี้ไม่สร้าง QR และไม่ตรวจยอดธนาคารอัตโนมัติ</div><label><input type="checkbox" id="transferConfirmed" style="width:auto"> ยืนยันว่าตรวจสอบยอดโอนแล้ว</label></div>
+<label for="saleNote">หมายเหตุ (ไม่บังคับ)</label><input id="saleNote" placeholder="เช่น รับของหน้างาน">
+<div class="actions" style="margin-top:12px"><button class="secondary" id="backToCart">กลับไปแก้รายการ</button><button class="primary" id="completeSale" style="flex:1">ยืนยันขายและบันทึกบิล</button></div>
+</div>
+</div>
+</div>
+</section>
+<section id="history" class="page">
+<div class="panel"><h2>ประวัติบิล</h2><div class="row"><div><label for="historyDate">วันที่</label><input type="date" id="historyDate"></div><div><label for="historySearch">ค้นหาเลขที่บิล / รายการ</label><input id="historySearch" placeholder="พิมพ์คำค้น"></div></div>
+<div class="actions no-print" style="margin-top:12px"><button class="secondary" id="exportHistory">ส่งออก CSV ประวัติบิล</button><button class="secondary" id="backupBtn">สำรองข้อมูลทั้งหมด (JSON)</button><button class="danger" id="clearBillsBtn">ล้างบิลทั้งหมด / เริ่มรอบขายใหม่</button><label class="secondary" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="file" id="restoreFile" accept=".json,application/json" style="display:none">นำเข้าข้อมูลสำรอง</label></div>
+<div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>เลขที่บิล / วันเวลา</th><th>รายการ</th><th>ยอดรวม</th><th>ชำระ</th><th>สถานะ</th><th class="no-print">จัดการ</th></tr></thead><tbody id="historyBody"></tbody></table></div><div id="historyEmpty" class="empty" style="display:none">ไม่พบรายการ</div></div>
+</section>
+<section id="report" class="page">
+<div class="panel"><h2>สรุปยอดรายวัน</h2><div class="row"><div><label for="reportDate">เลือกวันที่</label><input type="date" id="reportDate"></div><div style="align-self:end"><button class="primary" id="refreshReport" style="width:100%">แสดงสรุป</button></div></div></div>
+<div class="panel"><div class="summary-grid" id="metrics"></div></div>
+<div class="panel"><h2>จำนวนเหรียญแยกตามรุ่น</h2><div class="table-wrap"><table><thead><tr><th>รุ่นเหรียญ</th><th>จำนวน</th><th>ยอดขาย</th></tr></thead><tbody id="productReport"></tbody></table></div></div>
+<div class="panel"><h2>รายการบิลของวันที่เลือก</h2><div class="table-wrap"><table><thead><tr><th>เลขที่บิล</th><th>เวลา</th><th>เงินสด</th><th>โอน</th><th>สถานะ</th></tr></thead><tbody id="dailyBody"></tbody></table></div>
+<div class="actions no-print" style="margin-top:12px"><button class="primary" id="exportReport">ส่งออก CSV สรุปรายวัน</button><button class="secondary" onclick="window.print()">พิมพ์สรุป</button></div></div>
+</section>
+<section id="settings" class="page">
+<div class="panel"><h2>ตั้งค่าสินค้า ราคา และรูปสินค้า</h2><div class="notice">แก้ชื่อ ราคา และเพิ่มรูปสินค้าจริงได้ รูปจะเก็บไว้ในเบราว์เซอร์ของเครื่องนี้ และแสดงบนปุ่มสินค้าในหน้าขาย</div>
+<div class="row"><div><label for="newName">ชื่อรุ่นเหรียญ</label><input id="newName" placeholder="เช่น ทองแดงพิมพ์เล็ก"></div><div><label for="newPrice">ราคาต่อเหรียญ (บาท)</label><input id="newPrice" type="number" min="0" step="0.01" placeholder="เช่น 199"></div></div>
+<div class="actions" style="margin-top:10px"><button class="primary" id="addProduct">เพิ่มสินค้า</button><button class="secondary" id="resetProducts">คืนค่าตัวอย่างสินค้า</button></div>
+<div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>รูป</th><th>ชื่อสินค้า</th><th>ราคา</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="settingsBody"></tbody></table></div></div>
+<div class="panel"><h2>ตั้งค่าเครื่องนี้</h2>
+<div class="notice">ถ้าใช้หลายเครื่อง ให้ตั้งรหัสเครื่องต่างกัน (เช่น C สำหรับคอม, T สำหรับ iPad) เลขบิลจะเป็น POS-C-20261023-0001 จึงไม่ซ้ำกันระหว่างเครื่อง</div>
+<label for="deviceCode">รหัสเครื่อง (A-Z, 0-9 ไม่เกิน 3 ตัว เว้นว่างได้)</label><input id="deviceCode" maxlength="3" placeholder="เช่น C หรือ T" style="text-transform:uppercase">
+<label for="deviceMode">วิธีชำระเงินที่เครื่องนี้รับได้</label><select id="deviceMode"><option value="all">รับทั้งเงินสดและโอน</option><option value="cash">เงินสดเท่านั้น</option><option value="transfer">โอนเงินเท่านั้น</option></select>
+<label style="display:flex;gap:8px;align-items:center;margin-top:10px"><input type="checkbox" id="deviceAutoPrint" style="width:auto"> เปิดหน้าพิมพ์ใบเสร็จอัตโนมัติหลังกดยืนยันขาย</label>
+<div class="actions" style="margin-top:10px"><button class="primary" id="saveDevice">บันทึกการตั้งค่าเครื่อง</button></div>
+<p id="deviceStatus" class="muted"></p></div>
+<div class="panel"><h2>สำรองข้อมูลออนไลน์อัตโนมัติ</h2>
+<div class="notice">ตั้งค่า Google Apps Script URL และรหัสสำรองหนึ่งครั้ง จากนั้นระบบจะส่งบิลใหม่และสถานะยกเลิกขึ้น Google Sheets อัตโนมัติ เมื่ออินเทอร์เน็ตขาด ระบบจะเก็บคิวไว้ในเครื่องและลองส่งใหม่เมื่อกลับมาออนไลน์</div>
+<label for="backupUrl">Google Apps Script Web App URL</label><input id="backupUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec">
+<label for="backupToken">รหัสสำรอง (ต้องตรงกับใน Apps Script)</label><input id="backupToken" type="password" placeholder="ตั้งรหัสยาว ๆ ที่คาดเดายาก">
+<div class="actions" style="margin-top:10px"><button class="primary" id="saveBackupSettings">บันทึกการตั้งค่า</button><button class="secondary" id="testBackup">ทดสอบ/ส่งคิวค้าง</button></div>
+<p id="backupStatus" class="muted" aria-live="polite">ยังไม่ได้ตั้งค่าการสำรองออนไลน์</p>
+<p class="muted">ระบบจะเก็บคิวที่รอส่งไว้ในเครื่อง และส่งซ้ำได้อย่างปลอดภัยโดยใช้รหัสบิลเดิมเป็นตัวป้องกันข้อมูลซ้ำใน Google Sheets ทั้งนี้ควรตรวจดู Google Sheets เป็นระยะ</p>
+</div>
+<div class="panel"><h2>ข้อควรระวังข้อมูล</h2><p>ข้อมูลบิลเก็บในพื้นที่จัดเก็บของเบราว์เซอร์บนเครื่องนี้ ไม่ใช่ระบบออนไลน์ หากเบราว์เซอร์ถูกล้าง อุปกรณ์เสีย หรือเปิดไฟล์คนละเบราว์เซอร์ ข้อมูลอาจหายหรือไม่ปรากฏ</p><p>ควรกด “สำรองข้อมูลทั้งหมด (JSON)” เมื่อเริ่มงาน ระหว่างวัน และหลังปิดยอด แล้วเก็บไฟล์ไว้ในที่ปลอดภัย</p><button class="danger" id="clearAll">ลบข้อมูลทั้งหมดในเครื่องนี้</button></div>
+</section>
+</main>
+<script>
+(() => {
+const KEY='temple_coin_pos_v2';
+const defaultProducts=[
+{name:'ทองแดง เล็ก',price:399,active:true},
+{name:'ทองแดง ใหญ่',price:499,active:true},
+{name:'เงินบริสุทธิ์ เล็ก',price:1999,active:true},
+{name:'เงินบริสุทธิ์ ใหญ่',price:2499,active:true},
+{name:'เงินลงยาแดง เล็ก',price:2499,active:true},
+{name:'เงินลงยาน้ำเงิน เล็ก',price:2499,active:true},
+{name:'เงินลงยาแดง ใหญ่',price:2999,active:true},
+{name:'เงินลงยาน้ำเงิน ใหญ่',price:2999,active:true},
+{name:'ทองคำ เล็ก',price:99999,active:true},
+{name:'ทองคำ ใหญ่',price:129999,active:true},
+{name:'นำฤกษ์ ทองแดง เล็ก',price:399,active:true},
+{name:'นำฤกษ์ เงินบริสุทธิ์ เล็ก',price:1999,active:true}
+];
+const DEVICE_KEY='temple_coin_pos_device_v1';
+let deviceSettings=(()=>{try{const d=JSON.parse(localStorage.getItem(DEVICE_KEY));if(d)return {code:String(d.code||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,3),mode:['cash','transfer'].includes(d.mode)?d.mode:'all',autoPrint:!!d.autoPrint}}catch(e){}return {code:'',mode:'all',autoPrint:false}})();
+function allowedMethod(m){return deviceSettings.mode==='all'||deviceSettings.mode===m}
+let data=loadData(), cart={}, paymentMethod='cash';
+function loadData(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&Array.isArray(d.products)&&Array.isArray(d.sales))return d}catch(e){}return {products:defaultProducts.map((p,i)=>({...p,id:'p'+(i+1)})),sales:[],nextReceipt:1};}
+function save(){localStorage.setItem(KEY,JSON.stringify(data));}
+function money(n){return new Intl.NumberFormat('th-TH',{style:'currency',currency:'THB'}).format(Number(n)||0)}
+function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function localDay(iso){const d=new Date(iso);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function dateTime(iso){return new Date(iso).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'})}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function activeProducts(){return data.products.filter(p=>p.active)}
+function cartItems(){return Object.entries(cart).map(([id,qty])=>{const p=data.products.find(x=>x.id===id);return p&&qty>0?{productId:p.id,name:p.name,unitPrice:Number(p.price),quantity:qty,lineTotal:round(Number(p.price)*qty)}:null}).filter(Boolean)}
+function round(n){return Math.round((Number(n)+Number.EPSILON)*100)/100}
+function total(){return round(cartItems().reduce((s,x)=>s+x.lineTotal,0))}
+function renderProducts(){
+const products=activeProducts();
+const groups=[
+{title:'นำฤกษ์',items:products.filter(p=>p.name.includes('นำฤกษ์'))},
+{title:'พิมพ์เล็ก',items:products.filter(p=>!p.name.includes('นำฤกษ์')&&p.name.includes('เล็ก'))},
+{title:'พิมพ์ใหญ่',items:products.filter(p=>!p.name.includes('นำฤกษ์')&&p.name.includes('ใหญ่'))},
+{title:'สินค้าอื่น ๆ',items:products.filter(p=>!p.name.includes('นำฤกษ์')&&!p.name.includes('เล็ก')&&!p.name.includes('ใหญ่'))}
+].filter(g=>g.items.length);
+document.getElementById('productGrid').innerHTML=groups.map(g=>`<div class="product-group"><h3>${esc(g.title)}</h3><div class="products">${g.items.map(p=>`<button class="product" data-add="${esc(p.id)}">${p.imageData?`<img class="product-photo" src="${p.imageData}" alt="${esc(p.name)}">`:'<div class="product-photo-placeholder">เหรียญ</div>'}<strong>${esc(p.name)}</strong><span>${money(p.price)}</span></button>`).join('')}</div></div>`).join('')||'<div class="empty">ยังไม่มีสินค้า กรุณาเพิ่มในตั้งค่าสินค้า</div>';
+}
+function renderCart(){const items=cartItems();document.getElementById('cart').innerHTML=items.length?items.map(i=>`<div class="cartline"><div><strong>${esc(i.name)}</strong><div class="muted">${money(i.unitPrice)} × ${i.quantity} = ${money(i.lineTotal)}</div><div class="qty"><button data-qty="${esc(i.productId)}" data-delta="-1">−</button><strong>${i.quantity}</strong><button data-qty="${esc(i.productId)}" data-delta="1">+</button></div></div><button class="danger" data-remove="${esc(i.productId)}">เอาออก</button></div>`).join(''):'<div class="empty">ยังไม่ได้เลือกสินค้า</div>';document.getElementById('cartTotal').textContent=money(total());document.getElementById('payTotal').textContent=money(total());updateChange()}
+function updateChange(){const got=Number(document.getElementById('cashReceived').value)||0;document.getElementById('changeAmount').textContent=money(Math.max(0,round(got-total())))}
+// Print the actual sales receipt. Cash-drawer kick should be configured in the Windows printer driver,
+// so the drawer command is sent by the driver when this receipt is printed (not printed as text).
+function printReceipt(sale){
+  const w=window.open('', '_blank', 'width=460,height=720');
+  if(!w){ alert('บันทึกบิลแล้ว แต่ Chrome บล็อกหน้าต่างพิมพ์ กรุณาอนุญาต Pop-ups สำหรับไฟล์ POS แล้วพิมพ์จากประวัติบิลอีกครั้ง'); return; }
+  const safe = v => String(v ?? '').replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]));
+  const items = (sale.items || []).map(i => `<tr><td>${safe(i.name)}<div class="small">${money(i.unitPrice)} × ${i.quantity}</div></td><td class="num">${money(i.lineTotal)}</td></tr>`).join('');
+  const pay = sale.paymentMethod === 'cash' ? 'เงินสด' : 'โอนเงิน';
+  w.document.open();
+  w.document.write(`<!doctype html><html lang="th"><head><meta charset="utf-8"><title>ใบเสร็จ ${safe(sale.receiptNo)}</title><style>
+  @page{size:80mm auto;margin:3mm}*{box-sizing:border-box}body{font-family:Tahoma,Arial,sans-serif;font-size:12px;color:#000;width:72mm;margin:0 auto;padding:0}h1{font-size:16px;text-align:center;margin:0 0 5px}p{margin:3px 0}.center{text-align:center}.line{border-top:1px dashed #000;margin:7px 0}table{width:100%;border-collapse:collapse}td{padding:3px 0;vertical-align:top}.num{text-align:right;white-space:nowrap}.small{font-size:10px}.total{font-weight:bold;font-size:14px}.actions{margin:12px 0;text-align:center}.actions button{padding:8px 12px;margin:3px}@media print{.actions{display:none}}
+  </style></head><body><h1>ใบเสร็จรับเงิน</h1><p class="center">POS สิงห์มงคลนาม</p><div class="line"></div><p>เลขที่บิล: ${safe(sale.receiptNo)}</p><p>วันที่: ${safe(new Date(sale.createdAt).toLocaleString('th-TH'))}</p><div class="line"></div><table><tbody>${items}</tbody></table><div class="line"></div><p class="total">ยอดรวม: <span style="float:right">${money(sale.total)}</span></p><p>ชำระโดย: ${pay}</p>${sale.paymentMethod==='cash'?`<p>รับเงิน: <span style="float:right">${money(sale.cashReceived)}</span></p><p>เงินทอน: <span style="float:right">${money(sale.change)}</span></p>`:''}${sale.note?`<p>หมายเหตุ: ${safe(sale.note)}</p>`:''}<div class="line"></div><p class="center">ขอบพระคุณค่ะ</p><div class="actions"><button onclick="window.print()">พิมพ์ใบเสร็จ</button><button onclick="window.close()">ปิด</button></div><script>window.onload=function(){setTimeout(function(){window.focus();window.print()},250)};<\/script></body></html>`);
+  w.document.close();
+}
+
+function renderSettings(){document.getElementById('settingsBody').innerHTML=data.products.map(p=>`<tr><td>${p.imageData?`<img src="${p.imageData}" alt="" style="width:58px;height:58px;object-fit:contain;background:#f1f4f2;border-radius:8px">`:'—'}<div><label class="secondary" style="display:inline-block;cursor:pointer;margin-top:5px">เลือกรูป<input type="file" accept="image/*" data-image="${esc(p.id)}" style="display:none"></label>${p.imageData?` <button class="danger" data-remove-image="${esc(p.id)}">ลบรูป</button>`:''}</div></td><td>${esc(p.name)}</td><td>${money(p.price)}</td><td>${p.active?'เปิดขาย':'ปิดขาย'}</td><td><div class="actions"><button class="secondary" data-edit="${esc(p.id)}">แก้ไข</button><button class="secondary" data-toggle="${esc(p.id)}">${p.active?'ปิดขาย':'เปิดขาย'}</button></div></td></tr>`).join('')}
+function allItems(s){return (s.items||[]).map(i=>`${i.name} × ${i.quantity}`).join(', ')}
+function renderHistory(){const date=document.getElementById('historyDate').value, q=document.getElementById('historySearch').value.trim().toLowerCase();const rows=[...data.sales].reverse().filter(s=>(!date||localDay(s.createdAt)===date)&&(!q||(s.receiptNo+' '+allItems(s)).toLowerCase().includes(q)));document.getElementById('historyBody').innerHTML=rows.map(s=>`<tr><td><strong>${esc(s.receiptNo)}</strong><div class="muted">${dateTime(s.createdAt)}</div></td><td>${esc(allItems(s))}${s.note?`<div class="muted">${esc(s.note)}</div>`:''}</td><td>${money(s.total)}</td><td>${s.paymentMethod==='cash'?'เงินสด':'โอนเงิน'}${s.paymentMethod==='cash'?`<div class="muted">รับ ${money(s.cashReceived)} / ทอน ${money(s.change)}</div>`:''}</td><td><span class="status ${s.status==='cancelled'?'cancelled':''}">${s.status==='cancelled'?'ยกเลิก':'สำเร็จ'}</span>${s.status==='cancelled'?`<div class="muted">${esc(s.cancelReason||'')}</div>`:''}</td><td class="no-print"><button class="secondary" data-print="${esc(s.id)}">พิมพ์ใบเสร็จ</button>${s.status==='completed'?` <button class="danger" data-cancel="${esc(s.id)}">ยกเลิกบิล</button>`:''}</td></tr>`).join('');document.getElementById('historyEmpty').style.display=rows.length?'none':'block'}
+function daySales(date){return data.sales.filter(s=>localDay(s.createdAt)===date)}
+function renderReport(){const date=document.getElementById('reportDate').value||today();const sales=daySales(date), valid=sales.filter(s=>s.status==='completed');const cash=round(valid.filter(s=>s.paymentMethod==='cash').reduce((a,s)=>a+s.total,0));const transfer=round(valid.filter(s=>s.paymentMethod==='transfer').reduce((a,s)=>a+s.total,0));const totalAmount=round(cash+transfer);const cancelled=sales.filter(s=>s.status==='cancelled');const count=valid.length;
+document.getElementById('metrics').innerHTML=[['ยอดขายเงินสด',money(cash)],['ยอดขายโอน',money(transfer)],['ยอดขายสุทธิ',money(totalAmount)],['จำนวนบิลสำเร็จ',count+' บิล'],['บิลยกเลิก',cancelled.length+' บิล']].map(([a,b])=>`<div class="metric"><div class="muted">${a}</div><div class="num">${b}</div></div>`).join('');
+const byProduct={};valid.forEach(s=>(s.items||[]).forEach(i=>{if(!byProduct[i.name])byProduct[i.name]={qty:0,total:0};byProduct[i.name].qty+=i.quantity;byProduct[i.name].total+=i.lineTotal}));
+document.getElementById('productReport').innerHTML=Object.keys(byProduct).length?Object.entries(byProduct).map(([n,v])=>`<tr><td>${esc(n)}</td><td>${v.qty}</td><td>${money(v.total)}</td></tr>`).join(''):'<tr><td colspan="3">ไม่มีรายการขายในวันที่เลือก</td></tr>';
+document.getElementById('dailyBody').innerHTML=sales.length?[...sales].reverse().map(s=>`<tr><td>${esc(s.receiptNo)}</td><td>${new Date(s.createdAt).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}</td><td>${s.status==='completed'&&s.paymentMethod==='cash'?money(s.total):'—'}</td><td>${s.status==='completed'&&s.paymentMethod==='transfer'?money(s.total):'—'}</td><td>${s.status==='cancelled'?'ยกเลิก':'สำเร็จ'}</td></tr>`).join(''):'<tr><td colspan="5">ไม่มีรายการ</td></tr>';
+}
+function csvDownload(filename,rows){const csv='\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url)}
+function refresh(){renderProducts();renderCart();renderSettings();renderHistory();renderReport();save()}
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===b.dataset.page));if(b.dataset.page==='history')renderHistory();if(b.dataset.page==='report')renderReport()}));
+document.getElementById('productGrid').addEventListener('click',e=>{const b=e.target.closest('[data-add]');if(!b)return;const id=b.dataset.add;cart[id]=(cart[id]||0)+1;renderCart()});
+document.getElementById('cart').addEventListener('click',e=>{const q=e.target.closest('[data-qty]'),r=e.target.closest('[data-remove]');if(q){cart[q.dataset.qty]=(cart[q.dataset.qty]||0)+Number(q.dataset.delta);if(cart[q.dataset.qty]<=0)delete cart[q.dataset.qty]}if(r)delete cart[r.dataset.remove];renderCart()});
+document.getElementById('clearCart').onclick=()=>{if(Object.keys(cart).length&&confirm('ล้างรายการสินค้าที่เลือกทั้งหมดหรือไม่?')){cart={};renderCart();document.getElementById('paymentPanel').style.display='none'}};
+document.getElementById('checkoutBtn').onclick=()=>{if(!cartItems().length){alert('กรุณาเลือกเหรียญก่อน');return}document.getElementById('paymentPanel').style.display='block';document.getElementById('cashReceived').value='';document.getElementById('transferConfirmed').checked=false;paymentMethod=allowedMethod('cash')?'cash':'transfer';setMethodButtons();document.getElementById('paymentPanel').scrollIntoView({behavior:'smooth',block:'start'});updateChange()};
+function setMethodButtons(){document.querySelectorAll('[data-method]').forEach(b=>{b.style.display=allowedMethod(b.dataset.method)?'':'none';b.classList.toggle('selected',b.dataset.method===paymentMethod)});document.getElementById('cashFields').style.display=paymentMethod==='cash'?'block':'none';document.getElementById('transferFields').style.display=paymentMethod==='transfer'?'block':'none'}
+document.querySelectorAll('[data-method]').forEach(b=>b.onclick=()=>{if(!allowedMethod(b.dataset.method))return;paymentMethod=b.dataset.method;setMethodButtons()});
+document.getElementById('cashReceived').addEventListener('input',updateChange);
+document.getElementById('backToCart').onclick=()=>{document.getElementById('paymentPanel').style.display='none'};
+document.getElementById('completeSale').onclick=()=>{const items=cartItems(),sum=total();if(!allowedMethod(paymentMethod)){alert('เครื่องนี้ถูกตั้งให้รับ'+(deviceSettings.mode==='cash'?'เงินสด':'โอนเงิน')+'เท่านั้น');return}if(!items.length){alert('ไม่มีรายการสินค้า');return}let received=0,change=0;if(paymentMethod==='cash'){received=round(Number(document.getElementById('cashReceived').value)||0);if(received<sum){alert('ยอดรับเงินสดต้องไม่น้อยกว่ายอดรวม');return}change=round(received-sum)}else if(!document.getElementById('transferConfirmed').checked){alert('กรุณาตรวจสอบยอดโอนและติ๊กยืนยันก่อน');return}
+const now=new Date();const id=(crypto.randomUUID?crypto.randomUUID():'sale-'+now.getTime()+'-'+Math.random().toString(16).slice(2));const receiptNo='POS-'+(deviceSettings.code?deviceSettings.code+'-':'')+today().replaceAll('-','')+'-'+String(data.nextReceipt++).padStart(4,'0');const saleRecord={id,receiptNo,device:deviceSettings.code,createdAt:now.toISOString(),items,total:sum,paymentMethod,cashReceived:received,change,note:document.getElementById('saleNote').value.trim(),status:'completed',cancelledAt:null,cancelReason:''};data.sales.push(saleRecord);save();enqueueCloudBackup(saleRecord);cart={};document.getElementById('saleNote').value='';document.getElementById('paymentPanel').style.display='none';refresh();if(deviceSettings.autoPrint)printReceipt(saleRecord);alert('บันทึกบิลสำเร็จ\nเลขที่: '+receiptNo+'\nยอดรวม: '+money(sum));if(typeof requestCashDrawerKick==='function'&&paymentMethod==='cash'){requestCashDrawerKick(receiptNo)}};
+document.getElementById('historyDate').value=today();document.getElementById('reportDate').value=today();
+document.getElementById('historyDate').onchange=renderHistory;document.getElementById('historySearch').oninput=renderHistory;
+document.getElementById('historyBody').addEventListener('click',e=>{const pb=e.target.closest('[data-print]');if(pb){const ps=data.sales.find(x=>x.id===pb.dataset.print);if(ps)printReceipt(ps);return}const b=e.target.closest('[data-cancel]');if(!b)return;const s=data.sales.find(x=>x.id===b.dataset.cancel);if(!s||s.status!=='completed')return;const reason=prompt('ระบุเหตุผลที่ยกเลิกบิล '+s.receiptNo+' (จำเป็น):');if(reason===null)return;if(!reason.trim()){alert('ต้องระบุเหตุผลก่อนยกเลิก');return}if(!confirm('ยืนยันยกเลิกบิล '+s.receiptNo+'? ข้อมูลจะยังเก็บอยู่ในประวัติ'))return;s.status='cancelled';s.cancelledAt=new Date().toISOString();s.cancelReason=reason.trim();save();enqueueCloudBackup(s);refresh()});
+document.getElementById('refreshReport').onclick=renderReport;
+document.getElementById('exportHistory').onclick=()=>{const rows=[['เลขที่บิล','วันเวลา','สถานะ','วิธีชำระ','ยอดรวม','รับเงินสด','เงินทอน','รายการ','หมายเหตุ','เวลายกเลิก','เหตุผลยกเลิก'],...data.sales.map(s=>[s.receiptNo,dateTime(s.createdAt),s.status==='completed'?'สำเร็จ':'ยกเลิก',s.paymentMethod==='cash'?'เงินสด':'โอนเงิน',s.total,s.cashReceived,s.change,allItems(s),s.note,s.cancelledAt?dateTime(s.cancelledAt):'',s.cancelReason])];csvDownload('POS-ประวัติบิล-'+today()+'.csv',rows)};
+document.getElementById('exportReport').onclick=()=>{const date=document.getElementById('reportDate').value||today(),sales=daySales(date),valid=sales.filter(s=>s.status==='completed');const rows=[['สรุปยอดรายวัน',date],['ยอดขายเงินสด',valid.filter(s=>s.paymentMethod==='cash').reduce((a,s)=>a+s.total,0)],['ยอดขายโอน',valid.filter(s=>s.paymentMethod==='transfer').reduce((a,s)=>a+s.total,0)],['ยอดขายสุทธิ',valid.reduce((a,s)=>a+s.total,0)],[],['รุ่นเหรียญ','จำนวน','ยอดขาย']];const map={};valid.forEach(s=>s.items.forEach(i=>{map[i.name]=map[i.name]||{qty:0,total:0};map[i.name].qty+=i.quantity;map[i.name].total+=i.lineTotal}));Object.entries(map).forEach(([n,v])=>rows.push([n,v.qty,v.total]));rows.push([],['เลขที่บิล','วันเวลา','วิธีชำระ','ยอดรวม','สถานะ']);sales.forEach(s=>rows.push([s.receiptNo,dateTime(s.createdAt),s.paymentMethod==='cash'?'เงินสด':'โอนเงิน',s.total,s.status==='completed'?'สำเร็จ':'ยกเลิก']));csvDownload('POS-สรุปรายวัน-'+date+'.csv',rows)};
+document.getElementById('addProduct').onclick=()=>{const name=document.getElementById('newName').value.trim(),priceRaw=document.getElementById('newPrice').value;if(!name||priceRaw===''){alert('กรุณากรอกชื่อและราคา');return}const price=Number(priceRaw);if(!Number.isFinite(price)||price<0){alert('ราคาต้องเป็นตัวเลขตั้งแต่ 0 ขึ้นไป');return}data.products.push({id:'p'+Date.now(),name,price:round(price),active:true});document.getElementById('newName').value='';document.getElementById('newPrice').value='';refresh()};
+document.getElementById('settingsBody').addEventListener('click',e=>{const ed=e.target.closest('[data-edit]'),tg=e.target.closest('[data-toggle]'),rm=e.target.closest('[data-remove-image]');if(ed){const p=data.products.find(x=>x.id===ed.dataset.edit);if(!p)return;const name=prompt('ชื่อสินค้า',p.name);if(name===null)return;const price=prompt('ราคาต่อเหรียญ (บาท)',p.price);if(price===null)return;const n=Number(price);if(!name.trim()||!Number.isFinite(n)||n<0){alert('ชื่อหรือราคาไม่ถูกต้อง');return}p.name=name.trim();p.price=round(n)}if(tg){const p=data.products.find(x=>x.id===tg.dataset.toggle);if(p)p.active=!p.active}if(rm){const p=data.products.find(x=>x.id===rm.dataset.removeImage);if(p&&confirm('ลบรูปสินค้านี้หรือไม่?'))delete p.imageData}refresh()});
+document.getElementById('settingsBody').addEventListener('change',async e=>{const f=e.target.closest('input[data-image]');if(!f||!f.files||!f.files[0])return;const p=data.products.find(x=>x.id===f.dataset.image);if(!p)return;try{const file=f.files[0];if(!file.type.startsWith('image/'))throw new Error('กรุณาเลือกไฟล์รูปภาพ');const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(new Error('อ่านไฟล์ไม่สำเร็จ'));reader.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error('ไฟล์รูปภาพไม่ถูกต้อง'));img.onload=()=>{const canvas=document.createElement('canvas');const max=480,scale=Math.min(1,max/Math.max(img.width,img.height));canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);resolve(canvas.toDataURL('image/jpeg',0.82))};img.src=reader.result};reader.readAsDataURL(file)});p.imageData=dataUrl;refresh();alert('เพิ่มรูปสินค้าเรียบร้อย')}catch(err){alert(err.message||'เพิ่มรูปไม่สำเร็จ')}f.value=''});
+
+document.getElementById('resetProducts').onclick=()=>{if(!confirm('คืนค่ารายการสินค้าเริ่มต้นหรือไม่? บิลเก่าจะไม่ถูกลบ'))return;data.products=defaultProducts.map((p,i)=>({...p,id:'p'+(i+1)}));refresh()};
+document.getElementById('backupBtn').onclick=()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='POS-backup-'+today()+'.json';a.click();URL.revokeObjectURL(url)};
+document.getElementById('restoreFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!Array.isArray(d.products)||!Array.isArray(d.sales)||!Number.isFinite(Number(d.nextReceipt)))throw new Error();if(!confirm('นำเข้าข้อมูลสำรองและแทนที่ข้อมูลปัจจุบันในเครื่องนี้หรือไม่? แนะนำให้สำรองข้อมูลปัจจุบันก่อน'))return;data=d;cart={};refresh();alert('นำเข้าข้อมูลสำรองเรียบร้อย')}catch(err){alert('ไฟล์สำรองไม่ถูกต้อง')}e.target.value=''};
+document.getElementById('clearBillsBtn').onclick=()=>{
+  if(!confirm('เริ่มระบบใหม่จาก 0 สำหรับบิลทดสอบ? ระบบจะดาวน์โหลดไฟล์สำรองก่อน แล้วล้างเฉพาะประวัติบิลใน POS เครื่องนี้ สินค้า ราคา รูปสินค้า และการตั้งค่าจะยังอยู่ ส่วน Google Sheets ต้องลบแถวข้อมูลบิลในแท็บ POS_Backup แยกต่างหาก'))return;
+  if(prompt('เพื่อยืนยัน ให้พิมพ์ เริ่มจาก 0')!=='เริ่มจาก 0'){alert('ยกเลิกการล้างบิล');return}
+  try{
+    const backupBlob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const backupUrl=URL.createObjectURL(backupBlob),backupA=document.createElement('a');
+    backupA.href=backupUrl;backupA.download='POS-backup-before-reset-'+today()+'.json';backupA.click();
+    setTimeout(()=>URL.revokeObjectURL(backupUrl),1000);
+  }catch(e){alert('ดาวน์โหลดไฟล์สำรองไม่สำเร็จ จึงยังไม่ล้างข้อมูล');return}
+  data.sales=[];data.nextReceipt=1;save();cart={};
+  // Clear queued old test bills so they cannot be uploaded again after reset.
+  backupQueue=[];persistBackupQueue();
+  const panel=document.getElementById('paymentPanel');if(panel)panel.style.display='none';
+  refresh();
+  setBackupStatus('ล้างบิลทดสอบใน POS เครื่องนี้แล้ว • ลบแถวข้อมูลบิลในแท็บ POS_Backup ด้วยตนเองเพื่อเริ่มจาก 0 ออนไลน์');
+  alert('ล้างบิลทดสอบใน POS เครื่องนี้แล้ว\n\nขั้นตอนสุดท้าย: เปิด Google Sheets > แท็บ POS_Backup > เลือกแถว 2 ลงไปที่มีข้อมูล > คลิกขวา > ลบแถว\n\nอย่าลบแถวที่ 1 (หัวตาราง) และอย่าลบแท็บ Archive หากต้องการเก็บสำเนาเก่าไว้.');
+};
+document.getElementById('clearAll').onclick=()=>{if(prompt('เพื่อยืนยัน ให้พิมพ์ ลบข้อมูล')!=='ลบข้อมูล')return;if(!confirm('ข้อมูลบิลและสินค้าในเครื่องนี้จะถูกลบถาวร หากไม่มีไฟล์สำรองจะกู้คืนไม่ได้ ยืนยันหรือไม่?'))return;localStorage.removeItem(KEY);data=loadData();cart={};refresh();alert('ล้างข้อมูลแล้ว')};
+
+// สำรองออนไลน์แบบคิว: POST ผ่าน form/iframe เพื่อให้ใช้ได้จากไฟล์ HTML ในเครื่อง
+const BACKUP_SETTINGS_KEY='temple_coin_pos_cloud_backup_settings_v1';
+const BACKUP_QUEUE_KEY='temple_coin_pos_cloud_backup_queue_v1';
+let backupSettings=readBackupSettings();
+let backupQueue=readBackupQueue();
+let backupInFlight=false;
+let backupIframe=null;
+let backupFails={};let backupRetryTimer=null;
+function readBackupSettings(){try{return JSON.parse(localStorage.getItem(BACKUP_SETTINGS_KEY))||{url:'',token:''}}catch(e){return {url:'',token:''}}}
+function readBackupQueue(){try{const q=JSON.parse(localStorage.getItem(BACKUP_QUEUE_KEY));return Array.isArray(q)?q:[]}catch(e){return []}}
+function persistBackupQueue(){localStorage.setItem(BACKUP_QUEUE_KEY,JSON.stringify(backupQueue))}
+function setBackupStatus(message){const el=document.getElementById('backupStatus');if(el)el.textContent=message}
+function persistBackupSettings(){localStorage.setItem(BACKUP_SETTINGS_KEY,JSON.stringify(backupSettings));renderBackupSettings();pumpBackupQueue()}
+function renderBackupSettings(){
+ const urlEl=document.getElementById('backupUrl'),tokenEl=document.getElementById('backupToken');
+ if(urlEl&&document.activeElement!==urlEl)urlEl.value=backupSettings.url||'';
+ if(tokenEl&&document.activeElement!==tokenEl)tokenEl.value=backupSettings.token||'';
+ if(!backupSettings.url||!backupSettings.token)setBackupStatus('ยังไม่ได้ตั้งค่าการสำรองออนไลน์');
+ else setBackupStatus(`ตั้งค่าแล้ว • คิวที่รอส่ง: ${backupQueue.length} รายการ${backupQueue.length?' • กด “ทดสอบ/ส่งคิวค้าง” หรือรอระบบส่งอัตโนมัติ':''}`);
+}
+function queueSaleBackup(sale){
+ if(!sale)return;
+ // เก็บ snapshot ล่าสุดของบิล; หากยกเลิกภายหลังจะส่งสถานะใหม่ทับบิลเดิม ไม่สร้างแถวซ้ำ
+ const payload={kind:'sale_upsert',sale:JSON.parse(JSON.stringify(sale))};
+ const existing=backupQueue.findIndex(x=>x.sale&&x.sale.id===sale.id);
+ if(existing>=0)backupQueue[existing]=payload;else backupQueue.push(payload);
+}
+function enqueueCloudBackup(sale){
+ queueSaleBackup(sale);
+ persistBackupQueue();renderBackupSettings();pumpBackupQueue();
+}
+function queueAllLocalSales(){
+ data.sales.forEach(queueSaleBackup);
+ persistBackupQueue();renderBackupSettings();pumpBackupQueue();
+}
+function verifySaleInSheet(sale,done){
+ const cb='posVerify_'+Date.now().toString(36)+Math.random().toString(36).slice(2);
+ let over=false;const s=document.createElement('script');
+ const end=r=>{if(over)return;over=true;clearTimeout(tm);try{delete window[cb]}catch(e){window[cb]=undefined}s.remove();done(r)};
+ const tm=setTimeout(()=>end(false),12000);
+ window[cb]=r=>end(!!(r&&r.found&&r.status===sale.status));
+ const u=backupSettings.url+(backupSettings.url.includes('?')?'&':'?')+'action=has&id='+encodeURIComponent(sale.id)+'&token='+encodeURIComponent(backupSettings.token)+'&callback='+cb;
+ s.onerror=()=>end(false);s.src=u;document.body.appendChild(s);
+}
+function pumpBackupQueue(){
+ if(backupInFlight||!navigator.onLine||!backupSettings.url||!backupSettings.token||!backupQueue.length)return;
+ const item=backupQueue[0];
+ backupInFlight=true;
+ const nonce='n'+Date.now().toString(36)+Math.random().toString(36).slice(2);
+ const frame=document.createElement('iframe');
+ frame.name='posBackupFrame_'+nonce;frame.style.display='none';frame.setAttribute('aria-hidden','true');
+ const form=document.createElement('form');form.method='POST';form.action=backupSettings.url;form.target=frame.name;form.style.display='none';
+ const fields={payload:JSON.stringify(item),token:backupSettings.token,nonce};
+ Object.entries(fields).forEach(([name,value])=>{const input=document.createElement('input');input.type='hidden';input.name=name;input.value=value;form.appendChild(input)});
+ let finished=false;
+ let verifying=false;
+ const cleanupRaw=(ok,message)=>{
+   if(finished)return;finished=true;backupInFlight=false;
+   window.removeEventListener('message',onMessage);
+   setTimeout(()=>{form.remove();frame.remove()},250);
+   if(ok){
+     // Clear request is processed only after Apps Script confirms archive + clear succeeded.
+     const idx=backupQueue.findIndex(x=>JSON.stringify(x)===JSON.stringify(item));
+     if(idx>=0)backupQueue.splice(idx,1);
+     delete backupFails[item.sale?item.sale.id:item.kind];
+     if(item.kind==='clear_bills'){
+       backupQueue=backupQueue.filter(x=>x.kind!=='sale_upsert');
+       persistBackupQueue();
+       data.sales=[];data.nextReceipt=1;save();cart={};refresh();
+       setBackupStatus('สำเร็จ: สำรองบิลเดิมไว้ในแท็บ Archive แล้ว และล้างบิลจาก POS_Backup กับในเครื่องเรียบร้อย');
+       alert('ล้างบิลเรียบร้อยแล้ว\nGoogle Sheets สำรองข้อมูลเก่าไว้ในแท็บ Archive ก่อนล้าง\nสินค้า รูปสินค้า ราคา และการตั้งค่ายังคงอยู่');
+     }else{
+       persistBackupQueue();
+       setBackupStatus('สำรองออนไลน์สำเร็จ • คิวที่รอส่ง: '+backupQueue.length+' รายการ');
+       if(backupQueue.length)setTimeout(pumpBackupQueue,300);
+     }
+   }else{
+     // กันบิลหัวคิวที่ไม่ได้รับ ack บล็อกบิลอื่น: ย้ายไปท้ายคิว (ไม่ลบ) แล้วลองใหม่อัตโนมัติ
+     const k=item.sale?item.sale.id:item.kind;backupFails[k]=(backupFails[k]||0)+1;
+     const ix=backupQueue.findIndex(x=>JSON.stringify(x)===JSON.stringify(item));
+     if(ix>=0&&backupQueue.length>1){backupQueue.push(backupQueue.splice(ix,1)[0]);persistBackupQueue()}
+     const wait=Math.min(60000,3000*Math.pow(2,Math.min(backupFails[k]-1,5)));
+     clearTimeout(backupRetryTimer);backupRetryTimer=setTimeout(pumpBackupQueue,wait);
+     setBackupStatus('ส่งไม่สำเร็จหรือยังไม่ได้รับการยืนยัน • คิว '+backupQueue.length+' รายการยังอยู่ในเครื่อง ไม่ได้ลบข้อมูล กรุณาตรวจ URL, Token และสิทธิ์ Deploy ของ Apps Script'+(message?' • '+message:''));
+   }
+ };
+ const cleanup=(ok,message)=>{
+   if(finished||verifying)return;
+   if(ok||item.kind!=='sale_upsert'){cleanupRaw(ok,message);return}
+   // ไม่ได้รับ ack: ถามชีตตรง ๆ ว่ามีบิลนี้ (สถานะตรงกัน) แล้วหรือยัง
+   verifying=true;setBackupStatus('ไม่ได้รับ ack กำลังตรวจในชีตว่ามีบิล '+(item.sale.receiptNo||'')+' แล้วหรือไม่…');
+   verifySaleInSheet(item.sale,found=>{verifying=false;cleanupRaw(found,found?'':message)});
+ };
+ function onMessage(event){
+   const d=event.data;
+   if(!d||d.type!=='temple_pos_backup_result'||d.nonce!==nonce)return;
+   cleanup(!!d.ok,d.message||'');
+ }
+ window.addEventListener('message',onMessage);
+ frame.onerror=()=>cleanup(false,'');
+ document.body.appendChild(frame);document.body.appendChild(form);
+ try{form.submit()}catch(e){cleanup(false,'');return}
+ // If no acknowledgement arrives (network failure or blocked frame), retain queue for safe retry.
+ setTimeout(()=>cleanup(false,'หมดเวลารอการยืนยัน 30 วินาที'),30000);
+}
+document.getElementById('saveBackupSettings').onclick=()=>{
+ const url=document.getElementById('backupUrl').value.trim(),token=document.getElementById('backupToken').value.trim();
+ if(!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec(?:\?.*)?$/.test(url)){alert('กรุณาวาง Web App URL ที่ลงท้ายด้วย /exec จาก Google Apps Script');return}
+ if(token.length<16){alert('กรุณาตั้งรหัสสำรองอย่างน้อย 16 ตัวอักษร และใช้รหัสเดียวกับใน Apps Script');return}
+ backupSettings={url,token};queueAllLocalSales();persistBackupSettings();alert('บันทึกการตั้งค่าแล้ว ระบบจะเริ่มส่งบิลในเครื่องและคิวที่รออยู่ขึ้น Google Sheets');
+};
+document.getElementById('testBackup').onclick=()=>{
+ // อ่านค่าจากช่องบนหน้าจอทันที ป้องกันการใช้ค่าตั้งค่าเก่าจากหน่วยความจำ
+ const url=(document.getElementById('backupUrl')?.value||'').trim();
+ const token=(document.getElementById('backupToken')?.value||'').trim();
+ if(!url || !token){
+   setBackupStatus('กรุณากรอก URL และรหัสสำรอง แล้วกดบันทึกการตั้งค่าก่อน');
+   alert('กรุณากรอก Google Apps Script Web App URL และรหัสสำรอง แล้วกดบันทึกการตั้งค่าก่อน');
+   return;
+ }
+ if(!/https:\/\/script\.google\.com\/macros\/s\/.+\/exec(?:\?.*)?$/.test(url)){
+   setBackupStatus('URL ไม่ถูกต้อง: ต้องเป็น Web App URL ที่ลงท้ายด้วย /exec');
+   alert('ตรวจสอบ URL อีกครั้ง ต้องเป็นลิงก์ Google Apps Script Web App ที่ลงท้ายด้วย /exec');
+   return;
+ }
+ backupSettings={url,token};
+ try{localStorage.setItem(BACKUP_SETTINGS_KEY,JSON.stringify(backupSettings));}catch(e){}
+ if(!navigator.onLine){
+   setBackupStatus('เครื่องยังไม่ได้เชื่อมต่ออินเทอร์เน็ต • คิว '+backupQueue.length+' รายการยังอยู่ในเครื่อง');
+   alert('ยังไม่พบอินเทอร์เน็ต กรุณาเชื่อมต่อแล้วกดทดสอบ/ส่งคิวค้างอีกครั้ง');
+   return;
+ }
+ // เติมบิลทุกใบที่อยู่ในเครื่องลงคิวเสมอ แม้จะมีคิวเก่าค้างอยู่แล้ว
+ // เพื่อไม่ให้ปุ่มนี้ส่งแค่บิลแรกและตกหล่นบิลอื่น
+ data.sales.forEach(queueSaleBackup);
+ persistBackupQueue();
+ renderBackupSettings();
+ if(!backupQueue.length){
+   setBackupStatus('ไม่มีบิลในเครื่องหรือคิวค้างให้ส่ง');
+   alert('ไม่พบบิลในเครื่องหรือคิวค้างที่ต้องส่ง');
+   return;
+ }
+ // Apps Script ใช้ sale_id เดิมในการอัปเดต จึงไม่เพิ่มแถวซ้ำสำหรับบิลเดิม
+ setBackupStatus('กำลังส่งคิว '+backupQueue.length+' รายการไป Google Sheets…');
+ pumpBackupQueue();
+};
+window.addEventListener('online',()=>{setBackupStatus('กลับมาออนไลน์แล้ว กำลังลองส่งคิวสำรอง…');pumpBackupQueue()});
+window.addEventListener('storage',e=>{if(e.key===BACKUP_QUEUE_KEY){backupQueue=readBackupQueue();renderBackupSettings()}});
+
+// แจ้งเตือนก่อนปิดแท็บ/หน้าต่าง หากมีประวัติขายในเครื่องนี้
+window.addEventListener('beforeunload', function(e){
+  if (data.sales.length > 0) {
+    e.preventDefault();
+    e.returnValue = 'กรุณาสำรองข้อมูล POS ก่อนปิดหน้าต่าง เพื่อป้องกันข้อมูลสูญหาย';
+    return e.returnValue;
+  }
+});
+
+function renderDeviceSettings(){const c=document.getElementById('deviceCode'),m=document.getElementById('deviceMode');if(c)c.value=deviceSettings.code;if(m)m.value=deviceSettings.mode;const ap=document.getElementById('deviceAutoPrint');if(ap)ap.checked=!!deviceSettings.autoPrint;const s=document.getElementById('deviceStatus');if(s)s.textContent='ตอนนี้: รหัสเครื่อง '+(deviceSettings.code||'(ไม่ตั้ง)')+' • รับ'+({all:'เงินสดและโอน',cash:'เงินสดเท่านั้น',transfer:'โอนเงินเท่านั้น'})[deviceSettings.mode]+' • พิมพ์ใบเสร็จอัตโนมัติ: '+(deviceSettings.autoPrint?'เปิด':'ปิด')}
+document.getElementById('saveDevice').onclick=()=>{
+ const code=document.getElementById('deviceCode').value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,3),mode=document.getElementById('deviceMode').value;
+ deviceSettings={code,mode,autoPrint:document.getElementById('deviceAutoPrint').checked};try{localStorage.setItem(DEVICE_KEY,JSON.stringify(deviceSettings))}catch(e){alert('บันทึกไม่สำเร็จ');return}
+ paymentMethod=allowedMethod(paymentMethod)?paymentMethod:(mode==='transfer'?'transfer':'cash');setMethodButtons();renderDeviceSettings();alert('บันทึกการตั้งค่าเครื่องแล้ว เลขบิลถัดไปจะใช้รหัสเครื่องใหม่');
+};
+renderDeviceSettings();setMethodButtons();
+renderBackupSettings();
+window.addEventListener('focus',pumpBackupQueue);
+refresh();
+})();
+</script>
+</body>
+</html>
