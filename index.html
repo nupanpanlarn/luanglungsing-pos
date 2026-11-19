@@ -49,7 +49,7 @@ label{display:block;font-size:.9rem;font-weight:650;margin:10px 0 5px}
 </nav>
 <main>
 <section id="sell" class="page active">
-<div class="notice">ข้อมูลเก็บอยู่ในเบราว์เซอร์ของเครื่องนี้เท่านั้น อย่าล้างข้อมูลเว็บไซต์หรือเปลี่ยนเบราว์เซอร์ก่อนสำรองไฟล์ CSV</div>
+<div class="notice">บิลเก็บในเบราว์เซอร์ของเครื่องนี้และสำรองขึ้น Google Sheets ส่วนรายการสินค้าโหลดจากฐานข้อมูลส่วนกลางเมื่อเชื่อมต่ออินเทอร์เน็ต</div>
 <div class="layout">
 <div class="panel"><h2>เลือกเหรียญ</h2><div id="productGrid" class="products"></div></div>
 <div>
@@ -84,6 +84,10 @@ label{display:block;font-size:.9rem;font-weight:650;margin:10px 0 5px}
 <div class="row"><div><label for="newName">ชื่อรุ่นเหรียญ</label><input id="newName" placeholder="เช่น ทองแดงพิมพ์เล็ก"></div><div><label for="newPrice">ราคาต่อเหรียญ (บาท)</label><input id="newPrice" type="number" min="0" step="0.01" placeholder="เช่น 199"></div></div>
 <div class="actions" style="margin-top:10px"><button class="primary" id="addProduct">เพิ่มสินค้า</button><button class="secondary" id="resetProducts">คืนค่าตัวอย่างสินค้า</button></div>
 <p id="imageStatus" class="muted" aria-live="polite" style="margin:10px 0 0"></p>
+ <div class="notice" style="margin-top:12px"><strong>รายการสินค้าส่วนกลางสำหรับ 6 iPad</strong><br>เครื่องขายจะโหลดชื่อ ราคา และรูปจาก Google Sheets อัตโนมัติ การแก้ไขต้องใช้รหัสผู้ดูแลที่ตั้งไว้ใน Apps Script</div>
+ <label for="catalogAdminKey">รหัสผู้ดูแลสินค้า</label><input id="catalogAdminKey" type="password" placeholder="กรอกเฉพาะเครื่องผู้ดูแล">
+ <div class="actions" style="margin-top:10px"><button class="primary" id="publishCatalog">ส่งรายการสินค้าจากเครื่องนี้ขึ้นส่วนกลาง</button><button class="secondary" id="refreshCatalog">ดึงรายการสินค้าล่าสุด</button></div>
+ <p id="catalogStatus" class="muted" aria-live="polite">ยังไม่ได้เชื่อมต่อรายการสินค้าส่วนกลาง</p>
 <div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>รูป</th><th>ชื่อสินค้า</th><th>ราคา</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody id="settingsBody"></tbody></table></div></div>
 <div class="panel"><h2>ตั้งค่าเครื่องนี้</h2>
 <div class="notice">ถ้าใช้หลายเครื่อง ให้ตั้งรหัสเครื่องต่างกัน (เช่น C สำหรับคอม, T สำหรับ iPad) เลขบิลจะเป็น POS-C-20261023-0001 จึงไม่ซ้ำกันระหว่างเครื่อง</div>
@@ -192,12 +196,12 @@ document.getElementById('historyBody').addEventListener('click',e=>{const pb=e.t
 document.getElementById('refreshReport').onclick=renderReport;
 document.getElementById('exportHistory').onclick=()=>{const rows=[['เลขที่บิล','วันเวลา','สถานะ','วิธีชำระ','ยอดรวม','รับเงินสด','เงินทอน','รายการ','หมายเหตุ','เวลายกเลิก','เหตุผลยกเลิก'],...data.sales.map(s=>[s.receiptNo,dateTime(s.createdAt),s.status==='completed'?'สำเร็จ':'ยกเลิก',s.paymentMethod==='cash'?'เงินสด':'โอนเงิน',s.total,s.cashReceived,s.change,allItems(s),s.note,s.cancelledAt?dateTime(s.cancelledAt):'',s.cancelReason])];csvDownload('POS-ประวัติบิล-'+today()+'.csv',rows)};
 document.getElementById('exportReport').onclick=()=>{const date=document.getElementById('reportDate').value||today(),sales=daySales(date),valid=sales.filter(s=>s.status==='completed');const rows=[['สรุปยอดรายวัน',date],['ยอดขายเงินสด',valid.filter(s=>s.paymentMethod==='cash').reduce((a,s)=>a+s.total,0)],['ยอดขายโอน',valid.filter(s=>s.paymentMethod==='transfer').reduce((a,s)=>a+s.total,0)],['ยอดขายสุทธิ',valid.reduce((a,s)=>a+s.total,0)],[],['รุ่นเหรียญ','จำนวน','ยอดขาย']];const map={};valid.forEach(s=>s.items.forEach(i=>{map[i.name]=map[i.name]||{qty:0,total:0};map[i.name].qty+=i.quantity;map[i.name].total+=i.lineTotal}));Object.entries(map).forEach(([n,v])=>rows.push([n,v.qty,v.total]));rows.push([],['เลขที่บิล','วันเวลา','วิธีชำระ','ยอดรวม','สถานะ']);sales.forEach(s=>rows.push([s.receiptNo,dateTime(s.createdAt),s.paymentMethod==='cash'?'เงินสด':'โอนเงิน',s.total,s.status==='completed'?'สำเร็จ':'ยกเลิก']));csvDownload('POS-สรุปรายวัน-'+date+'.csv',rows)};
-document.getElementById('addProduct').onclick=()=>{const name=document.getElementById('newName').value.trim(),priceRaw=document.getElementById('newPrice').value;if(!name||priceRaw===''){alert('กรุณากรอกชื่อและราคา');return}const price=Number(priceRaw);if(!Number.isFinite(price)||price<0){alert('ราคาต้องเป็นตัวเลขตั้งแต่ 0 ขึ้นไป');return}data.products.push({id:'p'+Date.now(),name,price:round(price),active:true});document.getElementById('newName').value='';document.getElementById('newPrice').value='';refresh()};
-document.getElementById('settingsBody').addEventListener('click',e=>{const ed=e.target.closest('[data-edit]'),tg=e.target.closest('[data-toggle]'),rm=e.target.closest('[data-remove-image]');if(!ed&&!tg&&!rm)return;if(ed){const p=data.products.find(x=>x.id===ed.dataset.edit);if(!p)return;const name=prompt('ชื่อสินค้า',p.name);if(name===null)return;const price=prompt('ราคาต่อเหรียญ (บาท)',p.price);if(price===null)return;const n=Number(price);if(!name.trim()||!Number.isFinite(n)||n<0){alert('ชื่อหรือราคาไม่ถูกต้อง');return}p.name=name.trim();p.price=round(n)}if(tg){const p=data.products.find(x=>x.id===tg.dataset.toggle);if(p)p.active=!p.active}if(rm){const p=data.products.find(x=>x.id===rm.dataset.removeImage);if(p&&confirm('ลบรูปสินค้านี้หรือไม่?'))delete p.imageData}refresh()});
-document.getElementById('settingsBody').addEventListener('change',async e=>{const f=e.target.closest('input[data-image]');if(!f||!f.files||!f.files[0])return;const p=data.products.find(x=>x.id===f.dataset.image);if(!p){alert('ไม่พบสินค้านี้ กรุณารีเฟรชหน้าแล้วลองใหม่');return}const imgStatus=document.getElementById('imageStatus');const setImg=m=>{if(imgStatus)imgStatus.textContent=m};try{const file=f.files[0];setImg('กำลังย่อรูป “'+file.name+'” …');if(file.type&&!file.type.startsWith('image/'))throw new Error('กรุณาเลือกไฟล์รูปภาพ');const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(new Error('อ่านไฟล์ไม่สำเร็จ'));reader.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error('ไฟล์รูปภาพไม่ถูกต้อง'));img.onload=()=>{const canvas=document.createElement('canvas');const max=480,scale=Math.min(1,max/Math.max(img.width,img.height));canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);resolve(canvas.toDataURL('image/jpeg',0.82))};img.src=reader.result};reader.readAsDataURL(file)});p.imageData=dataUrl;refresh();let kept=false;try{const chk=JSON.parse(localStorage.getItem(KEY));const q=chk&&chk.products&&chk.products.find(x=>x.id===p.id);kept=!!(q&&q.imageData)}catch(_){}
+document.getElementById('addProduct').onclick=()=>{if(!document.getElementById('catalogAdminKey').value.trim()){alert('การเพิ่มสินค้าอนุญาตเฉพาะเครื่องผู้ดูแล กรุณากรอกรหัสผู้ดูแลก่อน');return}const name=document.getElementById('newName').value.trim(),priceRaw=document.getElementById('newPrice').value;if(!name||priceRaw===''){alert('กรุณากรอกชื่อและราคา');return}const price=Number(priceRaw);if(!Number.isFinite(price)||price<0){alert('ราคาต้องเป็นตัวเลขตั้งแต่ 0 ขึ้นไป');return}data.products.push({id:'p'+Date.now(),name,price:round(price),active:true});document.getElementById('newName').value='';document.getElementById('newPrice').value='';refresh();postCatalogProducts(data.products)};
+document.getElementById('settingsBody').addEventListener('click',e=>{if(e.target.closest('[data-edit],[data-toggle],[data-remove-image]')&&!document.getElementById('catalogAdminKey').value.trim()){alert('การแก้ไขสินค้าอนุญาตเฉพาะเครื่องผู้ดูแล กรุณากรอกรหัสผู้ดูแลก่อน');return}const ed=e.target.closest('[data-edit]'),tg=e.target.closest('[data-toggle]'),rm=e.target.closest('[data-remove-image]');if(!ed&&!tg&&!rm)return;if(ed){const p=data.products.find(x=>x.id===ed.dataset.edit);if(!p)return;const name=prompt('ชื่อสินค้า',p.name);if(name===null)return;const price=prompt('ราคาต่อเหรียญ (บาท)',p.price);if(price===null)return;const n=Number(price);if(!name.trim()||!Number.isFinite(n)||n<0){alert('ชื่อหรือราคาไม่ถูกต้อง');return}p.name=name.trim();p.price=round(n)}if(tg){const p=data.products.find(x=>x.id===tg.dataset.toggle);if(p)p.active=!p.active}if(rm){const p=data.products.find(x=>x.id===rm.dataset.removeImage);if(p&&confirm('ลบรูปสินค้านี้หรือไม่?'))delete p.imageData}refresh();postCatalogProducts(data.products)});
+document.getElementById('settingsBody').addEventListener('change',async e=>{if(e.target.closest('input[data-image]')&&!document.getElementById('catalogAdminKey').value.trim()){alert('การเพิ่มรูปสินค้าอนุญาตเฉพาะเครื่องผู้ดูแล กรุณากรอกรหัสผู้ดูแลก่อน');e.target.value='';return}const f=e.target.closest('input[data-image]');if(!f||!f.files||!f.files[0])return;const p=data.products.find(x=>x.id===f.dataset.image);if(!p){alert('ไม่พบสินค้านี้ กรุณารีเฟรชหน้าแล้วลองใหม่');return}const imgStatus=document.getElementById('imageStatus');const setImg=m=>{if(imgStatus)imgStatus.textContent=m};try{const file=f.files[0];setImg('กำลังย่อรูป “'+file.name+'” …');if(file.type&&!file.type.startsWith('image/'))throw new Error('กรุณาเลือกไฟล์รูปภาพ');const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(new Error('อ่านไฟล์ไม่สำเร็จ'));reader.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error('ไฟล์รูปภาพไม่ถูกต้อง'));img.onload=()=>{const canvas=document.createElement('canvas');const max=480,scale=Math.min(1,max/Math.max(img.width,img.height));canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);resolve(canvas.toDataURL('image/jpeg',0.82))};img.src=reader.result};reader.readAsDataURL(file)});p.imageData=dataUrl;refresh();let kept=false;try{const chk=JSON.parse(localStorage.getItem(KEY));const q=chk&&chk.products&&chk.products.find(x=>x.id===p.id);kept=!!(q&&q.imageData)}catch(_){}
 if(kept){setImg('✅ เพิ่มรูปให้ “'+p.name+'” แล้ว (ขนาด '+Math.round(dataUrl.length/1024)+' KB)');alert('เพิ่มรูปสินค้าเรียบร้อย')}else{setImg('⚠️ รูปแสดงได้ แต่เบราว์เซอร์ไม่ยอมเก็บข้อมูล รูปจะหายเมื่อรีเฟรช');alert('⚠️ รูปขึ้นแล้ว แต่เบราว์เซอร์นี้ไม่ยอมบันทึกข้อมูลถาวร รูปจะหายเมื่อรีเฟรช\nตรวจว่าไม่ได้เปิดโหมดส่วนตัว และไม่ได้บล็อกข้อมูลเว็บไซต์')}}catch(err){setImg('❌ '+(err.message||'เพิ่มรูปไม่สำเร็จ'));alert((err.message||'เพิ่มรูปไม่สำเร็จ')+'\nถ้าเป็นรูปจากกล้อง ลองแปลงเป็น JPG หรือ PNG ก่อน')}f.value=''});
 
-document.getElementById('resetProducts').onclick=()=>{if(!confirm('คืนค่ารายการสินค้าเริ่มต้นหรือไม่? บิลเก่าจะไม่ถูกลบ'))return;data.products=defaultProducts.map((p,i)=>({...p,id:'p'+(i+1)}));refresh()};
+document.getElementById('resetProducts').onclick=()=>{if(!document.getElementById('catalogAdminKey').value.trim()){alert('การคืนค่าสินค้าอนุญาตเฉพาะเครื่องผู้ดูแล กรุณากรอกรหัสผู้ดูแลก่อน');return}if(!confirm('คืนค่ารายการสินค้าเริ่มต้นหรือไม่? บิลเก่าจะไม่ถูกลบ'))return;data.products=defaultProducts.map((p,i)=>({...p,id:'p'+(i+1)}));refresh();postCatalogProducts(data.products)};
 document.getElementById('backupBtn').onclick=()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='POS-backup-'+today()+'.json';a.click();URL.revokeObjectURL(url)};
 document.getElementById('restoreFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!Array.isArray(d.products)||!Array.isArray(d.sales)||!Number.isFinite(Number(d.nextReceipt)))throw new Error();if(!confirm('นำเข้าข้อมูลสำรองและแทนที่ข้อมูลปัจจุบันในเครื่องนี้หรือไม่? แนะนำให้สำรองข้อมูลปัจจุบันก่อน'))return;data=d;cart={};refresh();alert('นำเข้าข้อมูลสำรองเรียบร้อย')}catch(err){alert('ไฟล์สำรองไม่ถูกต้อง')}e.target.value=''};
 document.getElementById('clearBillsBtn').onclick=()=>{
@@ -222,6 +226,38 @@ document.getElementById('clearAll').onclick=()=>{if(prompt('เพื่อย�
 // สำรองออนไลน์แบบคิว: POST ผ่าน form/iframe เพื่อให้ใช้ได้จากไฟล์ HTML ในเครื่อง
 const BACKUP_SETTINGS_KEY='temple_coin_pos_cloud_backup_settings_v1';
 const BACKUP_QUEUE_KEY='temple_coin_pos_cloud_backup_queue_v1';
+ const CATALOG_ADMIN_SESSION_KEY='temple_pos_catalog_admin_session_v1';
+ let catalogVersion=0, catalogSyncBusy=false;
+ function catalogStatus(m){const el=document.getElementById('catalogStatus');if(el)el.textContent=m}
+ function catalogUrl(action,callback){return backupSettings.url+(backupSettings.url.includes('?')?'&':'?')+'action='+encodeURIComponent(action)+'&callback='+encodeURIComponent(callback||'')}
+ function loadCentralCatalog(silent=false){
+   if(!backupSettings.url){catalogStatus('กรุณาตั้งค่า Google Apps Script URL ในส่วนสำรองข้อมูลออนไลน์ก่อน');return}
+   if(catalogSyncBusy)return;catalogSyncBusy=true;
+   const cb='posCatalog_'+Date.now().toString(36)+Math.random().toString(36).slice(2),script=document.createElement('script');let done=false;
+   const finish=(ok,msg)=>{if(done)return;done=true;catalogSyncBusy=false;clearTimeout(timer);try{delete window[cb]}catch(e){window[cb]=undefined}script.remove();if(!ok)catalogStatus(msg||'โหลดรายการสินค้าส่วนกลางไม่สำเร็จ')};
+   const timer=setTimeout(()=>finish(false,'หมดเวลารอข้อมูลส่วนกลาง • ใช้รายการสินค้าล่าสุดในเครื่องต่อไป'),15000);
+   window[cb]=r=>{if(!r||!r.ok){finish(false,(r&&r.message)||'โหลดสินค้าไม่สำเร็จ');return}const products=Array.isArray(r.products)?r.products:[];if(!products.length){finish(true,'ส่วนกลางยังไม่มีสินค้า • เครื่องผู้ดูแลต้องกดส่งรายการสินค้าขึ้นส่วนกลางครั้งแรก');return}
+     const incomingVersion=Number(r.version)||0;if(incomingVersion>=catalogVersion){const currentIds=new Set(data.products.map(p=>String(p.id)));const next=products.map(p=>({id:String(p.id),name:String(p.name),price:Number(p.price)||0,active:p.active!==false,imageData:String(p.imageData||'')}));
+       // ไม่เขียนทับข้อมูลขณะมีสินค้าอยู่ในตะกร้า เพื่อป้องกันรายการที่กำลังขายเปลี่ยนกลางบิล
+       if(Object.keys(cart).length){catalogStatus('พบรายการสินค้าใหม่ แต่มีสินค้าในตะกร้า • ระบบจะใช้รายการเดิมจนกว่าจะจบหรือเคลียร์บิล');finish(true);return}
+       data.products=next;catalogVersion=incomingVersion;save();refresh();catalogStatus('ซิงก์สินค้าส่วนกลางแล้ว • '+next.length+' รายการ • เวอร์ชัน '+catalogVersion+' • '+new Date().toLocaleTimeString('th-TH'));finish(true);
+     }else finish(true,'รายการสินค้าเป็นเวอร์ชันล่าสุดอยู่แล้ว');
+   };
+   script.onerror=()=>finish(false,'เชื่อมต่อ Google Apps Script ไม่สำเร็จ');script.src=catalogUrl('products',cb);document.body.appendChild(script);
+ }
+ function postCatalogProducts(products){
+   const adminKey=(document.getElementById('catalogAdminKey').value||'').trim();if(adminKey.length<16){alert('กรุณากรอกรหัสผู้ดูแลสินค้า (อย่างน้อย 16 ตัวอักษร)');return}
+   if(!backupSettings.url){alert('กรุณาตั้งค่า Google Apps Script URL ในส่วนสำรองข้อมูลออนไลน์ก่อน');return}
+   if(products.some(p=>(p.imageData||'').length>45000)){alert('มีรูปสินค้าบางรูปมีขนาดใหญ่เกินไปสำหรับ Google Sheets กรุณาลบรูปหรือย่อรูปให้เล็กลงก่อนส่ง');return}
+   const nonce='catalog_'+Date.now().toString(36)+Math.random().toString(36).slice(2),frame=document.createElement('iframe');frame.name='catalogFrame_'+nonce;frame.style.display='none';
+   const form=document.createElement('form');form.method='POST';form.action=backupSettings.url;form.target=frame.name;form.style.display='none';
+   const payload={kind:'products_upsert',products:products.map(p=>({id:p.id,name:p.name,price:Number(p.price)||0,active:p.active!==false,imageData:p.imageData||''}))};
+   [['payload',JSON.stringify(payload)],['token',backupSettings.token],['adminToken',adminKey],['nonce',nonce]].forEach(([k,v])=>{const i=document.createElement('input');i.type='hidden';i.name=k;i.value=v;form.appendChild(i)});
+   let done=false;const onMsg=e=>{const d=e.data;if(!d||d.type!=='temple_pos_backup_result'||d.nonce!==nonce)return;done=true;window.removeEventListener('message',onMsg);setTimeout(()=>{frame.remove();form.remove()},200);if(d.ok){sessionStorage.setItem(CATALOG_ADMIN_SESSION_KEY,'1');catalogStatus('บันทึกรายการสินค้าส่วนกลางสำเร็จ • กำลังโหลดตรวจสอบข้อมูล');alert('ส่งรายการสินค้าขึ้นส่วนกลางเรียบร้อย');loadCentralCatalog()}else{catalogStatus('บันทึกไม่สำเร็จ: '+(d.message||''));alert('บันทึกสินค้าไม่สำเร็จ: '+(d.message||'ตรวจสอบรหัสผู้ดูแล'))}};
+   window.addEventListener('message',onMsg);document.body.appendChild(frame);document.body.appendChild(form);try{form.submit()}catch(e){window.removeEventListener('message',onMsg);frame.remove();form.remove();alert('ส่งข้อมูลไม่สำเร็จ')}
+   setTimeout(()=>{if(!done){window.removeEventListener('message',onMsg);frame.remove();form.remove();catalogStatus('ไม่ได้รับการยืนยันจาก Apps Script • กรุณาตรวจสอบการ Deploy และรหัสผู้ดูแล')}} ,30000);
+ }
+
 let backupSettings=readBackupSettings();
 let backupQueue=readBackupQueue();
 let backupInFlight=false;
@@ -365,7 +401,14 @@ document.getElementById('testBackup').onclick=()=>{
  setBackupStatus('กำลังส่งคิว '+backupQueue.length+' รายการไป Google Sheets…');
  pumpBackupQueue();
 };
-window.addEventListener('online',()=>{setBackupStatus('กลับมาออนไลน์แล้ว กำลังลองส่งคิวสำรอง…');pumpBackupQueue()});
+
+ document.getElementById('publishCatalog').onclick=()=>{if(!confirm('ยืนยันส่งรายการสินค้า ชื่อ ราคา สถานะ และรูปจากเครื่องนี้ขึ้นเป็นข้อมูลกลางให้ iPad ทั้ง 6 เครื่องหรือไม่?'))return;postCatalogProducts(data.products)};
+ document.getElementById('refreshCatalog').onclick=()=>loadCentralCatalog(false);
+ // โหลดสินค้าเมื่อเปิด POS และตรวจสอบเวอร์ชันทุก 60 วินาที; ถ้าตะกร้าไม่ว่างจะไม่เขียนทับ
+ setTimeout(()=>loadCentralCatalog(true),1200);
+ setInterval(()=>{if(document.visibilityState==='visible')loadCentralCatalog(true)},60000);
+
+ window.addEventListener('online',()=>{setBackupStatus('กลับมาออนไลน์แล้ว กำลังลองส่งคิวสำรอง…');pumpBackupQueue()});
 window.addEventListener('storage',e=>{if(e.key===BACKUP_QUEUE_KEY){backupQueue=readBackupQueue();renderBackupSettings()}});
 
 // แจ้งเตือนก่อนปิดแท็บ/หน้าต่าง หากมีประวัติขายในเครื่องนี้
